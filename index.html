@@ -59,9 +59,26 @@
             font-weight: bold;
             height: 35px;
             margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
         .status-success { color: #00ffcc; text-shadow: 0 0 10px #00ffcc; }
         .status-fail { color: #ff3333; text-shadow: 0 0 10px #ff3333; }
+
+        /* 진동 애니메이션 클래스 */
+        .shake {
+            animation: shake 0.2s ease-in-out;
+        }
+
+        @keyframes shake {
+            0% { transform: translateX(0); }
+            20% { transform: translateX(-8px); }
+            40% { transform: translateX(8px); }
+            60% { transform: translateX(-6px); }
+            80% { transform: translateX(6px); }
+            100% { transform: translateX(0); }
+        }
 
         /* 글자 표시 영역 */
         .word-container {
@@ -182,7 +199,6 @@
     </div>
 
     <script>
-        // 사용 가능한 문자 배열 및 한글 매핑 구문 수정
         const ALLOWED_KEYS = ['a', 's', 'd', 'f', 'q', 'w', 'e', 'r'];
         const KOR_MAP = {
             'ㅁ': 'a', 'ㄴ': 's', 'ㅇ': 'd', 'ㄹ': 'f',
@@ -195,7 +211,7 @@
         let currentIndex = 0;
         let startTime = 0;
         let timerInterval = null;
-        let isGameOver = false;
+        let isTimeOver = false;
 
         const wordContainer = document.getElementById('wordContainer');
         const progressBar = document.getElementById('progressBar');
@@ -203,24 +219,27 @@
         const statusText = document.getElementById('status');
         const resetBtn = document.getElementById('resetBtn');
 
-        // 게임 시작 및 라운드 초기화 함수 (isManual: 버튼 클릭 여부)
-        function initRound(isManual = false) {
+        // 새로운 무작위 라운드 생성
+        function initNewRound(isManual = false) {
             if (timerInterval) clearInterval(timerInterval);
             
-            // 수동 재배치 버튼을 누른 게 아니고, 첫 시작도 아닐 때만 성공 메시지 표시
-            if (!isManual && currentSequence.length > 0 && !isGameOver) {
-                statusText.textContent = "파훼 성공!";
-                statusText.className = "status-message status-success";
-            } else if (isManual) {
-                statusText.textContent = ""; // 재배치 시 상태 초기화
+            // 수동으로 [재배치] 버튼을 누른 경우 무조건 상태창을 비움
+            if (isManual) {
+                statusText.textContent = "";
+                statusText.className = "status-message";
+            } else if (currentSequence.length > 0) {
+                // 이전 라운드 성공 상태로 끝났을 때만 파훼 성공 출력
+                if (!isTimeOver && !statusText.classList.contains('status-fail')) {
+                    statusText.textContent = "파훼 성공!";
+                    statusText.className = "status-message status-success";
+                }
             }
 
             currentSequence = [];
             currentIndex = 0;
-            isGameOver = false;
+            isTimeOver = false;
             wordContainer.innerHTML = '';
 
-            // 랜덤 8글자 생성 및 화면 표시
             for (let i = 0; i < 8; i++) {
                 const randomKey = ALLOWED_KEYS[Math.floor(Math.random() * ALLOWED_KEYS.length)];
                 currentSequence.push(randomKey);
@@ -233,12 +252,11 @@
 
             updateHighlight();
             
-            // 타이머 시작
             startTime = Date.now();
             timerInterval = setInterval(updateTimer, 20);
         }
 
-        // 강조 효과 업데이트
+        // 현재 입력 타겟 시각화
         function updateHighlight() {
             const boxes = wordContainer.children;
             for (let i = 0; i < boxes.length; i++) {
@@ -251,7 +269,7 @@
             }
         }
 
-        // 타이머 진행 및 게이지 바 갱신
+        // 실시간 타이머 및 게이지 조절
         function updateTimer() {
             const elapsedTime = Date.now() - startTime;
             const remainingTime = Math.max(0, LIMIT_TIME - elapsedTime);
@@ -263,56 +281,68 @@
 
             if (elapsedTime >= LIMIT_TIME) {
                 clearInterval(timerInterval);
-                handleFailure();
+                handleTimeOver();
             }
         }
 
-        // 실패 처리 함수
-        function handleFailure() {
-            isGameOver = true;
+        // 시간 초과 시 처리
+        function handleTimeOver() {
+            isTimeOver = true;
+            triggerFailureEffects();
+            timerText.textContent = `남은 시간: 0.00초`;
+            progressBar.style.width = `100%`;
+        }
+
+        // 실패 효과 일괄 처리 (문구 갱신 및 진동)
+        function triggerFailureEffects() {
             statusText.textContent = "파훼 실패!";
             statusText.className = "status-message status-fail";
             
-            // 1초 후 자동 다음 라운드 진행
-            setTimeout(() => {
-                initRound(true); 
-            }, 1000);
+            // 기존 애니메이션 클래스가 붙어 있다면 제거 후 재적용하여 매번 진동하게 처리
+            statusText.classList.remove('shake');
+            void statusText.offsetWidth; // 브라우저가 CSS 리플로우를 강제하도록 트리거
+            statusText.classList.add('shake');
         }
 
-        // 키보드 입력 이벤트 처리
+        // 키보드 이벤트
         window.addEventListener('keydown', (e) => {
-            if (isGameOver) return;
+            if (currentSequence.length === 0) return;
 
             let pressedKey = e.key.toLowerCase();
-
-            if (KOR_MAP[e.key]) {
-                pressedKey = KOR_MAP[e.key];
-            }
+            if (KOR_MAP[e.key]) pressedKey = KOR_MAP[e.key];
 
             if (!ALLOWED_KEYS.includes(pressedKey)) return;
 
+            // 정답 입력 시
             if (pressedKey === currentSequence[currentIndex]) {
                 currentIndex++;
                 updateHighlight();
 
+                // 8글자 완타 시 다음 라운드로 재생성
                 if (currentIndex === currentSequence.length) {
-                    clearInterval(timerInterval);
-                    initRound(false);
+                    if (timerInterval) clearInterval(timerInterval);
+                    
+                    // 실패 흔적이 있는 상태에서 끝났다면 0.8초 딜레이 후 다음 라운드
+                    if (isTimeOver || statusText.classList.contains('status-fail')) {
+                        setTimeout(() => { initNewRound(false); }, 800);
+                    } else {
+                        initNewRound(false);
+                    }
                 }
             } else {
-                clearInterval(timerInterval);
-                handleFailure();
+                // 틀린 키 입력 시 제자리 고정 및 진동 효과 발생
+                triggerFailureEffects();
             }
         });
 
-        // 재배치 버튼 클릭 이벤트 연동
+        // 재배치 버튼 클릭 이벤트
         resetBtn.addEventListener('click', () => {
-            initRound(true);
-            resetBtn.blur(); // 버튼 선택 상태 해제 (스페이스바 중복 입력 방지)
+            initNewRound(true);
+            resetBtn.blur();
         });
 
-        // 최초 게임 실행
-        initRound(true);
+        // 시작
+        initNewRound(true);
     </script>
 </body>
 </html>
