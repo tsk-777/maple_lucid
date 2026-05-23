@@ -22,32 +22,29 @@
         /* 게임 컨테이너 */
         .game-container {
             text-align: center;
-            background: linear-gradient(180deg, rgba(40, 10, 65, 0.8) 0%, rgba(15, 5, 30, 0.9) 100%);
+            background-color: #1a0a2a;
             padding: 40px;
             border-radius: 15px;
-            box-shadow: 0 0 20px rgba(162, 0, 255, 0.5);
-            border: 2px solid #a200ff;
+            border: 2px solid #6a1b9a;
             width: 600px;
             position: relative;
         }
 
         /* 재배치 버튼 스타일 */
         .reset-btn {
-            background: linear-gradient(180deg, #a200ff 0%, #6a00b8 100%);
-            border: 1px solid #bc66ff;
+            background-color: #4a148c;
+            border: 1px solid #7b1fa2;
             color: white;
             padding: 8px 20px;
             font-size: 16px;
             font-weight: bold;
             border-radius: 5px;
             cursor: pointer;
-            box-shadow: 0 0 10px rgba(162, 0, 255, 0.6);
             margin-bottom: 20px;
-            transition: all 0.2s ease;
+            transition: background-color 0.2s ease;
         }
         .reset-btn:hover {
-            background: linear-gradient(180deg, #bc66ff 0%, #a200ff 100%);
-            box-shadow: 0 0 15px rgba(188, 102, 255, 0.8);
+            background-color: #6a1b9a;
         }
         .reset-btn:active {
             transform: scale(0.98);
@@ -63,10 +60,11 @@
             align-items: center;
             justify-content: center;
         }
-        .status-success { color: #00ffcc; text-shadow: 0 0 10px #00ffcc; }
-        .status-fail { color: #ff3333; text-shadow: 0 0 10px #ff3333; }
+        /* 형광 번짐 효과(text-shadow) 완전 제거, 차분한 단색 지정 */
+        .status-success { color: #00e5ff; }
+        .status-fail { color: #ff5252; }
 
-        /* 진동 애니메이션 클래스 */
+        /* 진동 애니메이션 */
         .shake {
             animation: shake 0.2s ease-in-out;
         }
@@ -85,14 +83,14 @@
             display: flex;
             justify-content: center;
             gap: 12px;
-            background: rgba(80, 20, 120, 0.4);
+            background: rgba(40, 10, 70, 0.5);
             padding: 20px;
             border-radius: 10px;
-            border: 1px solid rgba(162, 0, 255, 0.3);
+            border: 1px solid #4a148c;
             margin-bottom: 25px;
         }
 
-        /* 개별 글자 스타일 */
+        /* 개별 글자 스타일 (눈부신 그라데이션 및 번짐 제거) */
         .char-box {
             position: relative;
             width: 50px;
@@ -101,17 +99,15 @@
             font-size: 28px;
             font-weight: bold;
             text-transform: uppercase;
-            background: radial-gradient(circle, #5e0bb5 0%, #250252 100%);
-            border: 2px solid #bc66ff;
+            background-color: #311b92;
+            border: 2px solid #7e57c2;
             border-radius: 12px;
-            text-shadow: 0 0 5px #ffffff;
-            box-shadow: 0 0 8px rgba(188, 102, 255, 0.6);
+            color: #ffffff;
         }
 
-        /* 현재 입력해야 할 글자 강조 */
+        /* 현재 입력해야 할 글자 강조 (형광 효과 제외, 단색 테두리로 구별) */
         .char-box.active {
-            border-color: #00ffcc;
-            box-shadow: 0 0 15px #00ffcc;
+            border-color: #00e5ff;
         }
         .char-box.active::before {
             content: '▼';
@@ -120,41 +116,38 @@
             left: 50%;
             transform: translateX(-50%);
             font-size: 14px;
-            color: #00ffcc;
+            color: #00e5ff;
         }
 
         /* 이미 입력 완료된 글자 */
         .char-box.completed {
-            background: #110022;
-            border-color: #555;
-            color: #555;
-            text-shadow: none;
-            box-shadow: none;
+            background-color: #120621;
+            border-color: #424242;
+            color: #616161;
         }
 
         /* 게이지 바 */
         .progress-container {
             width: 80%;
             height: 14px;
-            background-color: #221133;
+            background-color: #120621;
             border-radius: 7px;
             margin: 0 auto 10px auto;
             overflow: hidden;
-            border: 1px solid #a200ff;
+            border: 1px solid #4a148c;
         }
 
         .progress-bar {
             width: 0%;
             height: 100%;
-            background: linear-gradient(90deg, #a200ff, #ff00ea);
-            box-shadow: 0 0 10px #ff00ea;
+            background-color: #7b1fa2;
             transition: width 0.1s linear;
         }
 
         /* 타이머 텍스트 */
         .timer-text {
             font-size: 18px;
-            color: #ffcc00;
+            color: #ffb300;
             font-weight: bold;
             margin-bottom: 10px;
         }
@@ -168,7 +161,7 @@
         .main-title-bottom {
             font-size: 16px;
             font-weight: bold;
-            color: #bc66ff;
+            color: #b388ff;
             margin-bottom: 5px;
         }
         .dev-info {
@@ -223,12 +216,10 @@
         function initNewRound(isManual = false) {
             if (timerInterval) clearInterval(timerInterval);
             
-            // 수동으로 [재배치] 버튼을 누른 경우 무조건 상태창을 비움
             if (isManual) {
                 statusText.textContent = "";
                 statusText.className = "status-message";
             } else if (currentSequence.length > 0) {
-                // 이전 라운드 성공 상태로 끝났을 때만 파훼 성공 출력
                 if (!isTimeOver && !statusText.classList.contains('status-fail')) {
                     statusText.textContent = "파훼 성공!";
                     statusText.className = "status-message status-success";
@@ -293,14 +284,13 @@
             progressBar.style.width = `100%`;
         }
 
-        // 실패 효과 일괄 처리 (문구 갱신 및 진동)
+        // 실패 효과 일괄 처리
         function triggerFailureEffects() {
             statusText.textContent = "파훼 실패!";
             statusText.className = "status-message status-fail";
             
-            // 기존 애니메이션 클래스가 붙어 있다면 제거 후 재적용하여 매번 진동하게 처리
             statusText.classList.remove('shake');
-            void statusText.offsetWidth; // 브라우저가 CSS 리플로우를 강제하도록 트리거
+            void statusText.offsetWidth; 
             statusText.classList.add('shake');
         }
 
@@ -313,16 +303,13 @@
 
             if (!ALLOWED_KEYS.includes(pressedKey)) return;
 
-            // 정답 입력 시
             if (pressedKey === currentSequence[currentIndex]) {
                 currentIndex++;
                 updateHighlight();
 
-                // 8글자 완타 시 다음 라운드로 재생성
                 if (currentIndex === currentSequence.length) {
                     if (timerInterval) clearInterval(timerInterval);
                     
-                    // 실패 흔적이 있는 상태에서 끝났다면 0.8초 딜레이 후 다음 라운드
                     if (isTimeOver || statusText.classList.contains('status-fail')) {
                         setTimeout(() => { initNewRound(false); }, 800);
                     } else {
@@ -330,18 +317,15 @@
                     }
                 }
             } else {
-                // 틀린 키 입력 시 제자리 고정 및 진동 효과 발생
                 triggerFailureEffects();
             }
         });
 
-        // 재배치 버튼 클릭 이벤트
         resetBtn.addEventListener('click', () => {
             initNewRound(true);
             resetBtn.blur();
         });
 
-        // 시작
         initNewRound(true);
     </script>
 </body>
