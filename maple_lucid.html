@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>루시드 나이트메어 헬레나 QTE 연습</title>
+    <style>
+        body {
+            background-color: #0b0214;
+            color: #ffffff;
+            font-family: 'Arial', sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            overflow: hidden;
+            user-select: none;
+        }
+
+        /* 게임 컨테이너 */
+        .game-container {
+            text-align: center;
+            background: linear-gradient(180deg, rgba(40, 10, 65, 0.8) 0%, rgba(15, 5, 30, 0.9) 100%);
+            padding: 40px;
+            border-radius: 15px;
+            box-shadow: 0 0 20px rgba(162, 0, 255, 0.5);
+            border: 2px solid #a200ff;
+            width: 600px;
+            position: relative;
+        }
+
+        /* 재배치 버튼 스타일 */
+        .reset-btn {
+            background: linear-gradient(180deg, #a200ff 0%, #6a00b8 100%);
+            border: 1px solid #bc66ff;
+            color: white;
+            padding: 8px 20px;
+            font-size: 16px;
+            font-weight: bold;
+            border-radius: 5px;
+            cursor: pointer;
+            box-shadow: 0 0 10px rgba(162, 0, 255, 0.6);
+            margin-bottom: 20px;
+            transition: all 0.2s ease;
+        }
+        .reset-btn:hover {
+            background: linear-gradient(180deg, #bc66ff 0%, #a200ff 100%);
+            box-shadow: 0 0 15px rgba(188, 102, 255, 0.8);
+        }
+        .reset-btn:active {
+            transform: scale(0.98);
+        }
+
+        /* 상태 메시지 (성공/실패) */
+        .status-message {
+            font-size: 24px;
+            font-weight: bold;
+            height: 35px;
+            margin-bottom: 20px;
+        }
+        .status-success { color: #00ffcc; text-shadow: 0 0 10px #00ffcc; }
+        .status-fail { color: #ff3333; text-shadow: 0 0 10px #ff3333; }
+
+        /* 글자 표시 영역 */
+        .word-container {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            background: rgba(80, 20, 120, 0.4);
+            padding: 20px;
+            border-radius: 10px;
+            border: 1px solid rgba(162, 0, 255, 0.3);
+            margin-bottom: 25px;
+        }
+
+        /* 개별 글자 스타일 */
+        .char-box {
+            position: relative;
+            width: 50px;
+            height: 50px;
+            line-height: 50px;
+            font-size: 28px;
+            font-weight: bold;
+            text-transform: uppercase;
+            background: radial-gradient(circle, #5e0bb5 0%, #250252 100%);
+            border: 2px solid #bc66ff;
+            border-radius: 12px;
+            text-shadow: 0 0 5px #ffffff;
+            box-shadow: 0 0 8px rgba(188, 102, 255, 0.6);
+        }
+
+        /* 현재 입력해야 할 글자 강조 */
+        .char-box.active {
+            border-color: #00ffcc;
+            box-shadow: 0 0 15px #00ffcc;
+        }
+        .char-box.active::before {
+            content: '▼';
+            position: absolute;
+            top: -25px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 14px;
+            color: #00ffcc;
+        }
+
+        /* 이미 입력 완료된 글자 */
+        .char-box.completed {
+            background: #110022;
+            border-color: #555;
+            color: #555;
+            text-shadow: none;
+            box-shadow: none;
+        }
+
+        /* 게이지 바 */
+        .progress-container {
+            width: 80%;
+            height: 14px;
+            background-color: #221133;
+            border-radius: 7px;
+            margin: 0 auto 10px auto;
+            overflow: hidden;
+            border: 1px solid #a200ff;
+        }
+
+        .progress-bar {
+            width: 0%;
+            height: 100%;
+            background: linear-gradient(90deg, #a200ff, #ff00ea);
+            box-shadow: 0 0 10px #ff00ea;
+            transition: width 0.1s linear;
+        }
+
+        /* 타이머 텍스트 */
+        .timer-text {
+            font-size: 18px;
+            color: #ffcc00;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        /* 푸터 스타일 */
+        #footer {
+            margin-top: 40px;
+            text-align: center;
+            opacity: 0.7;
+        }
+        .main-title-bottom {
+            font-size: 16px;
+            font-weight: bold;
+            color: #bc66ff;
+            margin-bottom: 5px;
+        }
+        .dev-info {
+            font-size: 12px;
+            color: #aaaaaa;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="game-container">
+        <button id="resetBtn" class="reset-btn">재배치</button>
+
+        <div id="status" class="status-message"></div>
+
+        <div id="wordContainer" class="word-container"></div>
+
+        <div class="progress-container">
+            <div id="progressBar" class="progress-bar"></div>
+        </div>
+
+        <div id="timer" class="timer-text">남은 시간: 3.00초</div>
+    </div>
+
+    <div id="footer">
+        <div class="main-title-bottom">루시드 나이트메어 헬레나 qte연습</div>
+        <div class="dev-info">Developed by @tsk-777 on GitHub</div>
+    </div>
+
+    <script>
+        // 사용 가능한 문자 배열 및 한글 매핑 구문 수정
+        const ALLOWED_KEYS = ['a', 's', 'd', 'f', 'q', 'w', 'e', 'r'];
+        const KOR_MAP = {
+            'ㅁ': 'a', 'ㄴ': 's', 'ㅇ': 'd', 'ㄹ': 'f',
+            'ㅂ': 'q', 'ㅈ': 'w', 'ㄷ': 'e', 'ㄱ': 'r'
+        };
+
+        const LIMIT_TIME = 3000; // 제한 시간 3초
+        
+        let currentSequence = [];
+        let currentIndex = 0;
+        let startTime = 0;
+        let timerInterval = null;
+        let isGameOver = false;
+
+        const wordContainer = document.getElementById('wordContainer');
+        const progressBar = document.getElementById('progressBar');
+        const timerText = document.getElementById('timer');
+        const statusText = document.getElementById('status');
+        const resetBtn = document.getElementById('resetBtn');
+
+        // 게임 시작 및 라운드 초기화 함수 (isManual: 버튼 클릭 여부)
+        function initRound(isManual = false) {
+            if (timerInterval) clearInterval(timerInterval);
+            
+            // 수동 재배치 버튼을 누른 게 아니고, 첫 시작도 아닐 때만 성공 메시지 표시
+            if (!isManual && currentSequence.length > 0 && !isGameOver) {
+                statusText.textContent = "파훼 성공!";
+                statusText.className = "status-message status-success";
+            } else if (isManual) {
+                statusText.textContent = ""; // 재배치 시 상태 초기화
+            }
+
+            currentSequence = [];
+            currentIndex = 0;
+            isGameOver = false;
+            wordContainer.innerHTML = '';
+
+            // 랜덤 8글자 생성 및 화면 표시
+            for (let i = 0; i < 8; i++) {
+                const randomKey = ALLOWED_KEYS[Math.floor(Math.random() * ALLOWED_KEYS.length)];
+                currentSequence.push(randomKey);
+
+                const charBox = document.createElement('div');
+                charBox.classList.add('char-box');
+                charBox.textContent = randomKey;
+                wordContainer.appendChild(charBox);
+            }
+
+            updateHighlight();
+            
+            // 타이머 시작
+            startTime = Date.now();
+            timerInterval = setInterval(updateTimer, 20);
+        }
+
+        // 강조 효과 업데이트
+        function updateHighlight() {
+            const boxes = wordContainer.children;
+            for (let i = 0; i < boxes.length; i++) {
+                boxes[i].classList.remove('active', 'completed');
+                if (i < currentIndex) {
+                    boxes[i].classList.add('completed');
+                } else if (i === currentIndex) {
+                    boxes[i].classList.add('active');
+                }
+            }
+        }
+
+        // 타이머 진행 및 게이지 바 갱신
+        function updateTimer() {
+            const elapsedTime = Date.now() - startTime;
+            const remainingTime = Math.max(0, LIMIT_TIME - elapsedTime);
+            
+            timerText.textContent = `남은 시간: ${(remainingTime / 1000).toFixed(2)}초`;
+
+            const progressPercent = (elapsedTime / LIMIT_TIME) * 100;
+            progressBar.style.width = `${Math.min(100, progressPercent)}%`;
+
+            if (elapsedTime >= LIMIT_TIME) {
+                clearInterval(timerInterval);
+                handleFailure();
+            }
+        }
+
+        // 실패 처리 함수
+        function handleFailure() {
+            isGameOver = true;
+            statusText.textContent = "파훼 실패!";
+            statusText.className = "status-message status-fail";
+            
+            // 1초 후 자동 다음 라운드 진행
+            setTimeout(() => {
+                initRound(true); 
+            }, 1000);
+        }
+
+        // 키보드 입력 이벤트 처리
+        window.addEventListener('keydown', (e) => {
+            if (isGameOver) return;
+
+            let pressedKey = e.key.toLowerCase();
+
+            if (KOR_MAP[e.key]) {
+                pressedKey = KOR_MAP[e.key];
+            }
+
+            if (!ALLOWED_KEYS.includes(pressedKey)) return;
+
+            if (pressedKey === currentSequence[currentIndex]) {
+                currentIndex++;
+                updateHighlight();
+
+                if (currentIndex === currentSequence.length) {
+                    clearInterval(timerInterval);
+                    initRound(false);
+                }
+            } else {
+                clearInterval(timerInterval);
+                handleFailure();
+            }
+        });
+
+        // 재배치 버튼 클릭 이벤트 연동
+        resetBtn.addEventListener('click', () => {
+            initRound(true);
+            resetBtn.blur(); // 버튼 선택 상태 해제 (스페이스바 중복 입력 방지)
+        });
+
+        // 최초 게임 실행
+        initRound(true);
+    </script>
+</body>
+</html>
