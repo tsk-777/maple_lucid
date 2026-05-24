@@ -5,10 +5,19 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>루시드 나이트메어 헬레나 QTE 연습</title>
     <style>
+        /* 메이플스토리 상용 웹폰트 주소 연동 */
+        @font-face {
+            font-family: 'MapleStory';
+            src: url('https://fastly.jsdelivr.net/gh/fontmesh/maplestory@1.0/maplestory-bold.woff2') format('woff2'),
+                 url('https://fastly.jsdelivr.net/gh/fontmesh/maplestory@1.0/maplestory-bold.woff') format('woff');
+            font-weight: bold;
+            font-style: normal;
+        }
+
         body {
             background-color: #0b0214;
             color: #ffffff;
-            font-family: 'Arial', sans-serif;
+            font-family: 'MapleStory', 'Arial', sans-serif;
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -30,52 +39,145 @@
             position: relative;
         }
 
-        /* 재배치 버튼 스타일 */
-        .reset-btn {
-            background-color: #4a148c;
+        /* 컨트롤러 영역 */
+        .control-panel {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        /* 버튼 기본 스타일 */
+        .btn {
             border: 1px solid #7b1fa2;
             color: white;
-            padding: 8px 20px;
-            font-size: 16px;
+            padding: 8px 15px;
+            font-size: 14px;
             font-weight: bold;
+            font-family: 'MapleStory', sans-serif;
             border-radius: 5px;
             cursor: pointer;
-            margin-bottom: 20px;
-            transition: background-color 0.2s ease;
+            transition: all 0.2s ease;
+        }
+
+        /* 재배치 버튼 */
+        .reset-btn {
+            background-color: #4a148c;
         }
         .reset-btn:hover {
             background-color: #6a1b9a;
         }
-        .reset-btn:active {
+
+        /* 모드 선택 버튼 */
+        .mode-btn {
+            background-color: #2a1b4e;
+            opacity: 0.6;
+        }
+        .mode-btn:hover {
+            background-color: #3d2b6d;
+            opacity: 0.9;
+        }
+        .mode-btn.active {
+            background-color: #00e5ff;
+            border-color: #00b8d4;
+            color: #0b0214;
+            opacity: 1;
+        }
+
+        .btn:active {
             transform: scale(0.98);
         }
 
-        /* 상태 메시지 (성공/실패) */
+        /* ON/OFF 토글 스타일 */
+        .toggle-container {
+            display: flex;
+            align-items: center;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+            color: #b388ff;
+            margin-left: 5px;
+        }
+        .toggle-container input {
+            margin-right: 6px;
+            cursor: pointer;
+        }
+
+        /* 세트 진행 표시 */
+        .set-indicator {
+            font-size: 18px;
+            color: #00e5ff;
+            margin-bottom: 5px;
+            font-weight: bold;
+            visibility: hidden; 
+        }
+
+        /* 상태 메시지 */
         .status-message {
             font-size: 24px;
             font-weight: bold;
             height: 35px;
-            margin-bottom: 20px;
+            margin-bottom: 15px;
             display: flex;
             align-items: center;
             justify-content: center;
         }
-        /* 형광 번짐 효과(text-shadow) 완전 제거, 차분한 단색 지정 */
         .status-success { color: #00e5ff; }
         .status-fail { color: #ff5252; }
 
-        /* 진동 애니메이션 */
-        .shake {
-            animation: shake 0.2s ease-in-out;
+        /* 가상 키보드 가이드 스타일 */
+        .keyboard-guide {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 5px;
+            margin: 0 0 0 45px;
+            background: rgba(30, 10, 50, 0.6);
+            padding: 12px;
+            border-radius: 8px 8px 0 0;
+            border: 1px solid #4a148c;
+            border-bottom: none;
+            width: fit-content;
+            transition: opacity 0.2s ease, visibility 0.2s ease;
         }
-
-        @keyframes shake {
-            0% { transform: translateX(0); }
-            20% { transform: translateX(-8px); }
-            40% { transform: translateX(8px); }
-            60% { transform: translateX(-6px); }
-            80% { transform: translateX(6px); }
-            100% { transform: translateX(0); }
+        .keyboard-guide.hidden {
+            opacity: 0 !important;
+            visibility: hidden !hidden !important;
+            height: 0;
+            padding: 0;
+            border: none;
+        }
+        .keyboard-row {
+            display: flex;
+            gap: 5px;
+        }
+        .row-asdf {
+            margin-left: 15px;
+        }
+        .key-cap {
+            width: 40px;
+            height: 40px;
+            line-height: 40px;
+            background-color: #2a1b4e;
+            border: 1px solid #5e35b1;
+            border-radius: 5px;
+            font-size: 16px;
+            font-weight: bold;
+            text-transform: uppercase;
+            color: #b388ff;
+            text-align: center;
+            transition: all 0.1s ease;
+        }
+        .key-cap.target-now {
+            background-color: #ff6d00;
+            border-color: #ffab40;
+            color: #ffffff;
+        }
+        .key-cap.target-next {
+            background-color: #757575;
+            border-color: #bdbdbd;
+            color: #ffffff;
         }
 
         /* 글자 표시 영역 */
@@ -87,10 +189,11 @@
             padding: 20px;
             border-radius: 10px;
             border: 1px solid #4a148c;
+            margin-top: 0;
             margin-bottom: 25px;
         }
 
-        /* 개별 글자 스타일 (눈부신 그라데이션 및 번짐 제거) */
+        /* 개별 글자 스타일 */
         .char-box {
             position: relative;
             width: 50px;
@@ -103,9 +206,8 @@
             border: 2px solid #7e57c2;
             border-radius: 12px;
             color: #ffffff;
+            transition: background-color 0.1s ease, border-color 0.1s ease;
         }
-
-        /* 현재 입력해야 할 글자 강조 (형광 효과 제외, 단색 테두리로 구별) */
         .char-box.active {
             border-color: #00e5ff;
         }
@@ -118,12 +220,55 @@
             font-size: 14px;
             color: #00e5ff;
         }
-
-        /* 이미 입력 완료된 글자 */
         .char-box.completed {
             background-color: #120621;
             border-color: #424242;
             color: #616161;
+        }
+        .char-box.wrong-pass {
+            background-color: #b71c1c !important;
+            border-color: #ef5350 !important;
+            color: #ffffff !important;
+        }
+
+        /* 결과 테이블 디자인 */
+        .result-container {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+            margin: 20px 0;
+        }
+        .result-title {
+            font-size: 28px;
+            color: #ffb300;
+            font-weight: bold;
+        }
+        .result-table {
+            width: 80%;
+            border-collapse: collapse;
+            margin-bottom: 15px;
+        }
+        .result-table th, .result-table td {
+            border: 1px solid #6a1b9a;
+            padding: 10px;
+            font-size: 18px;
+        }
+        .result-table th {
+            background-color: #2a1b4e;
+            color: #b388ff;
+        }
+        .result-table td {
+            background-color: #120621;
+        }
+        .restart-notice {
+            font-size: 16px;
+            color: #00e5ff;
+            animation: blink 1s infinite alternate;
+        }
+        @keyframes blink {
+            0% { opacity: 0.5; }
+            100% { opacity: 1; }
         }
 
         /* 게이지 바 */
@@ -136,7 +281,6 @@
             overflow: hidden;
             border: 1px solid #4a148c;
         }
-
         .progress-bar {
             width: 0%;
             height: 100%;
@@ -173,16 +317,53 @@
 <body>
 
     <div class="game-container">
-        <button id="resetBtn" class="reset-btn">재배치</button>
+        <div class="control-panel">
+            <button id="resetBtn" class="btn reset-btn">재배치</button>
+            <button id="practiceModeBtn" class="btn mode-btn active">연습 모드</button>
+            <button id="liveModeBtn" class="btn mode-btn">실전 모드</button>
+            <label class="toggle-container">
+                <input type="checkbox" id="guideToggle" checked> 키 가이드 ON/OFF
+            </label>
+        </div>
+
+        <div id="setIndicator" class="set-indicator">현재 세트: 1 / 3</div>
 
         <div id="status" class="status-message"></div>
 
+        <div id="keyboardGuide" class="keyboard-guide">
+            <div class="keyboard-row row-qwer">
+                <div class="key-cap" data-key="q">q</div>
+                <div class="key-cap" data-key="w">w</div>
+                <div class="key-cap" data-key="e">e</div>
+                <div class="key-cap" data-key="r">r</div>
+            </div>
+            <div class="keyboard-row row-asdf">
+                <div class="key-cap" data-key="a">a</div>
+                <div class="key-cap" data-key="s">s</div>
+                <div class="key-cap" data-key="d">d</div>
+                <div class="key-cap" data-key="f">f</div>
+            </div>
+        </div>
+
         <div id="wordContainer" class="word-container"></div>
+
+        <div id="resultContainer" class="result-container">
+            <div class="result-title">실전모드 최종 결과</div>
+            <table class="result-table">
+                <thead>
+                    <tr>
+                        <th>세트</th>
+                        <th>맞은 개수 / 전체</th>
+                    </tr>
+                </thead>
+                <tbody id="resultBody"></tbody>
+            </table>
+            <div class="restart-notice">■ Enter 키를 누르면 실전모드를 다시 시작합니다 ■</div>
+        </div>
 
         <div class="progress-container">
             <div id="progressBar" class="progress-bar"></div>
         </div>
-
         <div id="timer" class="timer-text">남은 시간: 3.00초</div>
     </div>
 
@@ -198,37 +379,64 @@
             'ㅂ': 'q', 'ㅈ': 'w', 'ㄷ': 'e', 'ㄱ': 'r'
         };
 
-        const LIMIT_TIME = 3000; // 제한 시간 3초
+        const LIMIT_TIME = 3000; 
+        const TRANSITION_DELAY = 400; // 요청하신 0.4초(400ms) 딜레이로 조정
         
         let currentSequence = [];
         let currentIndex = 0;
         let startTime = 0;
         let timerInterval = null;
         let isTimeOver = false;
+        let isTransitioning = false; 
+        let wrongIndices = new Set(); 
+
+        // 게임 모드 상태 데이터
+        let currentMode = 'practice'; 
+        let currentSet = 1;
+        const TOTAL_SETS = 3;
+        let setResults = []; 
+        let isGameOver = false;
 
         const wordContainer = document.getElementById('wordContainer');
         const progressBar = document.getElementById('progressBar');
         const timerText = document.getElementById('timer');
         const statusText = document.getElementById('status');
         const resetBtn = document.getElementById('resetBtn');
+        const practiceModeBtn = document.getElementById('practiceModeBtn');
+        const liveModeBtn = document.getElementById('liveModeBtn');
+        const guideToggle = document.getElementById('guideToggle');
+        const keyboardGuide = document.getElementById('keyboardGuide');
+        const setIndicator = document.getElementById('setIndicator');
+        const resultContainer = document.getElementById('resultContainer');
+        const resultBody = document.getElementById('resultBody');
 
-        // 새로운 무작위 라운드 생성
         function initNewRound(isManual = false) {
             if (timerInterval) clearInterval(timerInterval);
             
-            if (isManual) {
-                statusText.textContent = "";
-                statusText.className = "status-message";
-            } else if (currentSequence.length > 0) {
-                if (!isTimeOver && !statusText.classList.contains('status-fail')) {
-                    statusText.textContent = "파훼 성공!";
-                    statusText.className = "status-message status-success";
-                }
+            isGameOver = false;
+            isTransitioning = false;
+            resultContainer.style.display = 'none';
+            if (guideToggle.checked) {
+                keyboardGuide.style.display = 'flex';
             }
+            wordContainer.style.display = 'flex';
+            progressBar.parentElement.style.display = 'block';
+            timerText.style.display = 'block';
+
+            if (currentMode === 'live') {
+                setIndicator.style.visibility = 'visible';
+                setIndicator.textContent = `현재 세트: ${currentSet} / ${TOTAL_SETS}`;
+            } else {
+                setIndicator.style.visibility = 'hidden';
+            }
+
+            statusText.textContent = "";
+            statusText.className = "status-message";
 
             currentSequence = [];
             currentIndex = 0;
             isTimeOver = false;
+            wrongIndices.clear();
             wordContainer.innerHTML = '';
 
             for (let i = 0; i < 8; i++) {
@@ -247,10 +455,14 @@
             timerInterval = setInterval(updateTimer, 20);
         }
 
-        // 현재 입력 타겟 시각화
         function updateHighlight() {
             const boxes = wordContainer.children;
             for (let i = 0; i < boxes.length; i++) {
+                if (wrongIndices.has(i)) {
+                    boxes[i].className = "char-box wrong-pass";
+                    continue;
+                }
+
                 boxes[i].classList.remove('active', 'completed');
                 if (i < currentIndex) {
                     boxes[i].classList.add('completed');
@@ -258,10 +470,30 @@
                     boxes[i].classList.add('active');
                 }
             }
+
+            const keyCaps = document.querySelectorAll('.key-cap');
+            keyCaps.forEach(cap => cap.classList.remove('target-now', 'target-next'));
+
+            if (currentIndex < currentSequence.length) {
+                const currentTargetKey = currentSequence[currentIndex];
+                const targetCap = document.querySelector(`.key-cap[data-key="${currentTargetKey}"]`);
+                if (targetCap) {
+                    targetCap.classList.add('target-now');
+                }
+            }
+
+            if (currentIndex + 1 < currentSequence.length) {
+                const nextTargetKey = currentSequence[currentIndex + 1];
+                const nextCap = document.querySelector(`.key-cap[data-key="${nextTargetKey}"]`);
+                if (nextCap && !nextCap.classList.contains('target-now')) {
+                    nextCap.classList.add('target-next');
+                }
+            }
         }
 
-        // 실시간 타이머 및 게이지 조절
         function updateTimer() {
+            if (isTransitioning) return;
+
             const elapsedTime = Date.now() - startTime;
             const remainingTime = Math.max(0, LIMIT_TIME - elapsedTime);
             
@@ -276,27 +508,93 @@
             }
         }
 
-        // 시간 초과 시 처리
         function handleTimeOver() {
             isTimeOver = true;
-            triggerFailureEffects();
             timerText.textContent = `남은 시간: 0.00초`;
             progressBar.style.width = `100%`;
+
+            if (currentMode === 'practice') {
+                statusText.textContent = "시간 초과!";
+                statusText.className = "status-message status-fail";
+            } else if (currentMode === 'live') {
+                isTransitioning = true;
+                let totalWrong = wrongIndices.size + (8 - currentIndex);
+                let totalCorrect = 8 - totalWrong;
+                setResults.push(`${totalCorrect} / 8`);
+
+                setTimeout(() => {
+                    if (currentSet < TOTAL_SETS) {
+                        currentSet++;
+                        initNewRound(false);
+                    } else {
+                        showFinalResults();
+                    }
+                }, TRANSITION_DELAY);
+            }
         }
 
-        // 실패 효과 일괄 처리
-        function triggerFailureEffects() {
-            statusText.textContent = "파훼 실패!";
-            statusText.className = "status-message status-fail";
+        function checkRoundCompletion() {
+            if (currentIndex === currentSequence.length) {
+                if (timerInterval) clearInterval(timerInterval);
+                
+                if (currentMode === 'live') {
+                    isTransitioning = true;
+                    let totalCorrect = 8 - wrongIndices.size;
+                    setResults.push(`${totalCorrect} / 8`);
+
+                    setTimeout(() => {
+                        if (currentSet < TOTAL_SETS) {
+                            currentSet++;
+                            initNewRound(false);
+                        } else {
+                            showFinalResults();
+                        }
+                    }, TRANSITION_DELAY);
+                } else {
+                    isTransitioning = true; 
+                    if (isTimeOver || wrongIndices.size > 0) {
+                        statusText.textContent = "파훼 실패!";
+                        statusText.className = "status-message status-fail";
+                        setTimeout(() => { initNewRound(false); }, TRANSITION_DELAY);
+                    } else {
+                        statusText.textContent = "파훼 성공!";
+                        statusText.className = "status-message status-success";
+                        setTimeout(() => { initNewRound(false); }, TRANSITION_DELAY);
+                    }
+                }
+            }
+        }
+
+        function showFinalResults() {
+            isGameOver = true;
+            setIndicator.textContent = "게임 종료";
             
-            statusText.classList.remove('shake');
-            void statusText.offsetWidth; 
-            statusText.classList.add('shake');
+            keyboardGuide.style.display = 'none';
+            wordContainer.style.display = 'none';
+            progressBar.parentElement.style.display = 'none';
+            timerText.style.display = 'none';
+
+            resultBody.innerHTML = '';
+            setResults.forEach((res, idx) => {
+                const row = document.createElement('tr');
+                row.innerHTML = `<td>${idx + 1}세트</td><td>${res}</td>`;
+                resultBody.appendChild(row);
+            });
+
+            resultContainer.style.display = 'flex';
         }
 
-        // 키보드 이벤트
         window.addEventListener('keydown', (e) => {
-            if (currentSequence.length === 0) return;
+            if (isGameOver) {
+                if (e.key === 'Enter') {
+                    currentSet = 1;
+                    setResults = [];
+                    initNewRound(false);
+                }
+                return;
+            }
+
+            if (currentSequence.length === 0 || isTransitioning) return;
 
             let pressedKey = e.key.toLowerCase();
             if (KOR_MAP[e.key]) pressedKey = KOR_MAP[e.key];
@@ -306,24 +604,51 @@
             if (pressedKey === currentSequence[currentIndex]) {
                 currentIndex++;
                 updateHighlight();
-
-                if (currentIndex === currentSequence.length) {
-                    if (timerInterval) clearInterval(timerInterval);
-                    
-                    if (isTimeOver || statusText.classList.contains('status-fail')) {
-                        setTimeout(() => { initNewRound(false); }, 800);
-                    } else {
-                        initNewRound(false);
-                    }
-                }
-            } else {
-                triggerFailureEffects();
+                checkRoundCompletion();
+            } 
+            else {
+                wrongIndices.add(currentIndex);
+                currentIndex++;
+                updateHighlight();
+                checkRoundCompletion();
             }
         });
 
+        function switchMode(mode) {
+            currentMode = mode;
+            currentSet = 1;
+            setResults = [];
+            
+            if (mode === 'practice') {
+                practiceModeBtn.classList.add('active');
+                liveModeBtn.classList.remove('active');
+            } else {
+                liveModeBtn.classList.add('active');
+                practiceModeBtn.classList.remove('active');
+            }
+            initNewRound(true);
+        }
+
+        practiceModeBtn.addEventListener('click', () => { switchMode('practice'); practiceModeBtn.blur(); });
+        liveModeBtn.addEventListener('click', () => { switchMode('live'); liveModeBtn.blur(); });
+
         resetBtn.addEventListener('click', () => {
+            if (currentMode === 'live') {
+                currentSet = 1;
+                setResults = [];
+            }
             initNewRound(true);
             resetBtn.blur();
+        });
+
+        guideToggle.addEventListener('change', (e) => {
+            if (e.target.checked) {
+                keyboardGuide.classList.remove('hidden');
+                if (!isGameOver) keyboardGuide.style.display = 'flex';
+            } else {
+                keyboardGuide.classList.add('hidden');
+            }
+            guideToggle.blur();
         });
 
         initNewRound(true);
